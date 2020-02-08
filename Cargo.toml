@@ -1,0 +1,16 @@
+[package]
+name = "stsse"
+version = "0.1.0"
+authors = ["0xffffffff <0xgggggg@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+base64 = "0.11"
+serde_json = "1.0"
+regex = "1"
+anyhow = "1.0"
+bincode = "1.1"
+rand = "0.7"
+serde = { version = "1.0", features = ["derive"] }

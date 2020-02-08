@@ -1,0 +1,7 @@
+/target/
+/sts_src/
+
+**/*.rs.bk
+
+*.autosave
+*.stsc
