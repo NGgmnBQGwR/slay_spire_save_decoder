@@ -6,7 +6,8 @@ use serde_json::Value as JsonValue;
 
 use std::path::PathBuf;
 
-use crate::cache::STSCache;
+use crate::cache::{Card, STSCache};
+use crate::cache_enums::CardColor;
 
 const ENCODING_KEY: &[u8] = b"key";
 
@@ -112,6 +113,36 @@ fn print_status(json: &JsonValue) {
     println!("g - Give 100 gold");
     println!("z - Remove all cards");
     println!("x - Give 10 random cards");
+    println!("c - Give 5 Colorless cards");
+    println!("v/b/n/m - Give 5 Red/Green/Blue/Purple cards");
+}
+
+fn get_random_cards(
+    cache: &STSCache,
+    json_dict: &JsonValue,
+    rng: &mut rand::rngs::ThreadRng,
+    amount: u32,
+    filter: impl Fn(&Card) -> bool,
+) -> JsonValue {
+    let mut current_cards =
+        serde_json::from_value::<Vec<JsonCard>>(json_dict["cards"].clone()).unwrap();
+    for _ in 0..amount {
+        let random_card = loop {
+            let random_card_id = rng.gen_range(0, cache.cards.len());
+            let random_card_data = &cache.cards[random_card_id];
+            if !filter(random_card_data) {
+                continue;
+            } else {
+                break JsonCard {
+                    id: random_card_data.id.clone(),
+                    misc: 0,
+                    upgrades: 0,
+                };
+            }
+        };
+        current_cards.push(random_card);
+    }
+    serde_json::to_value(current_cards).unwrap()
 }
 
 pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
@@ -134,18 +165,32 @@ pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
                 json_dict["cards"] = serde_json::to_value(Vec::<JsonCard>::new()).unwrap();
             }
             "x" => {
-                let mut all_cards =
-                    serde_json::from_value::<Vec<JsonCard>>(json_dict["cards"].clone()).unwrap();
-                for _ in 0..10 {
-                    let random_card_id = rng.gen_range(0, cache.cards.len());
-                    let random_card = JsonCard {
-                        id: cache.cards[random_card_id].id.clone(),
-                        misc: 0,
-                        upgrades: 0,
-                    };
-                    all_cards.push(random_card);
-                }
-                json_dict["cards"] = serde_json::to_value(all_cards).unwrap();
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 10, |_| true);
+            }
+            "v" => {
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 5, |x| {
+                    x.color == CardColor::RED
+                });
+            }
+            "b" => {
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 5, |x| {
+                    x.color == CardColor::GREEN
+                });
+            }
+            "n" => {
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 5, |x| {
+                    x.color == CardColor::BLUE
+                });
+            }
+            "m" => {
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 5, |x| {
+                    x.color == CardColor::PURPLE
+                });
+            }
+            "c" => {
+                json_dict["cards"] = get_random_cards(&cache, &json_dict, &mut rng, 5, |x| {
+                    x.color == CardColor::COLORLESS
+                });
             }
             "q" => break,
             _ => continue,
