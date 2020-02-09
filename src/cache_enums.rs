@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum CardRarity {
     BASIC,
     SPECIAL,
@@ -23,7 +23,7 @@ impl CardRarity {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum CardColor {
     RED,
     GREEN,
@@ -46,7 +46,7 @@ impl CardColor {
     }
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum CardType {
     ATTACK,
     SKILL,
@@ -66,7 +66,7 @@ impl CardType {
         }
     }
 }
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
 pub enum RelicTier {
     DEPRECATED,
     STARTER,
