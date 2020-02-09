@@ -2,6 +2,7 @@ use anyhow::Result as AnyResult;
 use base64;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 
 use std::path::PathBuf;
 
@@ -80,16 +81,16 @@ pub fn get_save_file_path(folder: &PathBuf) -> Option<PathBuf> {
     }
 }
 
-fn unpack_file(savefile_path: &PathBuf) -> AnyResult<serde_json::Value> {
+fn unpack_file(savefile_path: &PathBuf) -> AnyResult<JsonValue> {
     let contents = std::fs::read(&savefile_path)?;
     let config = base64::Config::new(base64::CharacterSet::Standard, true);
     let unbased_encoded = base64::decode_config(&contents, config)?;
     let unbased_decoded = encode(&unbased_encoded, ENCODING_KEY);
-    let json_dict: serde_json::Value = serde_json::from_slice(&unbased_decoded)?;
+    let json_dict: JsonValue = serde_json::from_slice(&unbased_decoded)?;
     Ok(json_dict)
 }
 
-fn pack_file(value: serde_json::Value, filepath: &PathBuf) -> AnyResult<()> {
+fn pack_file(value: JsonValue, filepath: &PathBuf) -> AnyResult<()> {
     let config = base64::Config::new(base64::CharacterSet::Standard, true);
     let json_string = value.to_string();
     let unbased_encoded = encode(&json_string.as_bytes(), ENCODING_KEY);
@@ -97,7 +98,7 @@ fn pack_file(value: serde_json::Value, filepath: &PathBuf) -> AnyResult<()> {
     std::fs::write(&filepath, based_encoded).map_err(anyhow::Error::msg)
 }
 
-fn print_status(json: &serde_json::Value) {
+fn print_status(json: &JsonValue) {
     println!("Gold: {} ({})", json["gold"], json["gold_gained"]);
 
     let cards = serde_json::from_value::<Vec<JsonCard>>(json["cards"].clone()).unwrap();
@@ -124,10 +125,10 @@ pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
         match buffer.trim() {
             "g" => {
                 let g1 = serde_json::from_value::<u32>(json_dict["gold"].clone()).unwrap() + 100;
-                json_dict["gold"] = serde_json::Value::from(g1);
+                json_dict["gold"] = JsonValue::from(g1);
                 let g2 =
                     serde_json::from_value::<u32>(json_dict["gold_gained"].clone()).unwrap() + 100;
-                json_dict["gold_gained"] = serde_json::Value::from(g2);
+                json_dict["gold_gained"] = JsonValue::from(g2);
             }
             "z" => {
                 json_dict["cards"] = serde_json::to_value(Vec::<JsonCard>::new()).unwrap();
