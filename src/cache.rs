@@ -28,11 +28,13 @@ pub struct STSCache {
     pub relics: Vec<Relic>,
 }
 
-fn parse_card(contents: &str) -> Option<Card> {
-    let id_regex = Regex::new(r#"ID[ ]*=[ ]*"(.+)""#).unwrap();
-    let cap_regex = Regex::new(r"([A-Z]{2,})").unwrap();
-    let id_match = id_regex.captures(&contents).unwrap();
-    let id = id_match.get(1)?;
+fn parse_card(contents: &str) -> Card {
+    let id_regex = Regex::new(r#"ID[ ]*=[ ]*"(.+)""#).expect("Failed to compile id regex.");
+    let cap_regex = Regex::new(r"([A-Z]{2,})").expect("Failed to compile capital regex.");
+    let id_match = id_regex
+        .captures(&contents)
+        .expect("Failed to get create regex capture groups.");
+    let id = id_match.get(1).expect("Failed to get id regex group.");
 
     let cap_matches: Vec<_> = cap_regex
         .find_iter(&contents)
@@ -51,15 +53,13 @@ fn parse_card(contents: &str) -> Option<Card> {
         .iter()
         .filter_map(|x| CardType::from_str(x))
         .collect();
-    if rarity.is_empty() || color.is_empty() || type_.is_empty() {
-        None
-    } else {
-        Some(Card {
-            id: id.as_str().to_owned(),
-            rarity: rarity.pop().unwrap(),
-            color: color.pop().unwrap(),
-            type_: type_.pop().unwrap(),
-        })
+    Card {
+        id: id.as_str().to_owned(),
+        rarity: rarity
+            .pop()
+            .expect("Expected 1 rarity regex result, got 0."),
+        color: color.pop().expect("Expected 1 color regex result, got 0."),
+        type_: type_.pop().expect("Expected 1 type regex result, got 0."),
     }
 }
 
@@ -190,7 +190,7 @@ impl STSCache {
 
                 STSCache::walk_dir(card_folder, folder_filter, file_filter)?
                     .into_iter()
-                    .filter_map(|x| parse_card(&x))
+                    .map(|x| parse_card(&x))
                     .collect()
             };
 
