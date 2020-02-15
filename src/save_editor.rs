@@ -115,6 +115,8 @@ fn print_status(json: &JsonValue) {
     println!("x - Give 10 random cards");
     println!("c - Give 5 Colorless cards");
     println!("v/b/n/m - Give 5 Red/Green/Blue/Purple cards");
+    println!("f - Give card by name");
+    println!("r - Remove card by name");
 }
 
 fn get_random_cards(
@@ -145,10 +147,64 @@ fn get_random_cards(
     serde_json::to_value(current_cards).unwrap()
 }
 
+fn add_specific_card(cache: &STSCache, json_dict: &JsonValue, card_name: &str) -> JsonValue {
+    let mut current_cards =
+        serde_json::from_value::<Vec<JsonCard>>(json_dict["cards"].clone()).unwrap();
+    for card in &cache.cards {
+        if card.id == card_name {
+            let new_card = JsonCard {
+                id: card.id.clone(),
+                misc: card.misc,
+                upgrades: 0,
+            };
+            current_cards.push(new_card);
+        }
+    }
+    serde_json::to_value(current_cards).unwrap()
+}
+
+fn remove_specific_card(json_dict: &JsonValue, card_name: &str) -> JsonValue {
+    let mut current_cards =
+        serde_json::from_value::<Vec<JsonCard>>(json_dict["cards"].clone()).unwrap();
+    current_cards.retain(|x| x.id != card_name);
+    serde_json::to_value(current_cards).unwrap()
+}
+
+fn get_card_name_from_user(possible_cards: &[String]) -> Option<String> {
+    let mut buffer = String::with_capacity(10);
+    let mut results: Vec<_> = Vec::with_capacity(10);
+    loop {
+        print!("Enter the name of card (or nothing to leave): ");
+        buffer.clear();
+        results.clear();
+        std::io::stdin()
+            .read_line(&mut buffer)
+            .expect("Failed to read input into buffer in get_card_name_from_user.");
+        let lower_buffer = buffer.to_lowercase();
+        let needle = lower_buffer.trim();
+        if needle.is_empty() {
+            break None;
+        }
+
+        for choice in possible_cards {
+            if choice.to_lowercase().contains(needle) {
+                results.push(choice.clone());
+            }
+        }
+        match results.len() {
+            0 => continue,
+            1 => break Some(results.pop().expect("Tried to pop from empty results.")),
+            _ => println!("Found several matches: {:?}", results),
+        }
+    }
+}
+
 pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
     let mut json_dict = unpack_file(save_file)?;
     let mut buffer = String::with_capacity(5);
     let mut rng = rand::thread_rng();
+
+    let all_cache_card_ids: Vec<_> = cache.cards.iter().map(|x| x.id.clone()).collect();
     loop {
         print_status(&json_dict);
         buffer.clear();
@@ -160,6 +216,16 @@ pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
                 let g2 =
                     serde_json::from_value::<u32>(json_dict["gold_gained"].clone()).unwrap() + 100;
                 json_dict["gold_gained"] = JsonValue::from(g2);
+            }
+            "f" => {
+                if let Some(card_name) = get_card_name_from_user(&all_cache_card_ids) {
+                    json_dict["cards"] = add_specific_card(&cache, &json_dict, &card_name);
+                }
+            }
+            "r" => {
+                if let Some(card_name) = get_card_name_from_user(&all_cache_card_ids) {
+                    json_dict["cards"] = remove_specific_card(&json_dict, &card_name);
+                }
             }
             "z" => {
                 json_dict["cards"] = serde_json::to_value(Vec::<JsonCard>::new()).unwrap();
