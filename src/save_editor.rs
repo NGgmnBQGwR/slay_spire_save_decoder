@@ -194,8 +194,15 @@ fn get_card_name_from_user(possible_cards: &[String]) -> Option<String> {
             }
         }
         match results.len() {
-            0 => continue,
-            1 => break Some(results.pop().expect("Tried to pop from empty results.")),
+            0 => {
+                println!("No card matches that text.");
+                continue;
+            }
+            1 => {
+                let card_name = results.pop().expect("Tried to pop from empty results.");
+                println!("Matched card '{}'.", card_name);
+                break Some(card_name);
+            }
             _ => println!("Found several matches: {:?}", results),
         }
     }
