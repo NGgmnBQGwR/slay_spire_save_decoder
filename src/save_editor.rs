@@ -4,6 +4,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
 
+use std::io::Write;
 use std::path::PathBuf;
 
 use crate::cache::{Card, STSCache};
@@ -175,6 +176,7 @@ fn get_card_name_from_user(possible_cards: &[String]) -> Option<String> {
     let mut results: Vec<_> = Vec::with_capacity(10);
     loop {
         print!("Enter the name of card (or nothing to leave): ");
+        std::io::stdout().flush().expect("Failed to flush stdout.");
         buffer.clear();
         results.clear();
         std::io::stdin()
