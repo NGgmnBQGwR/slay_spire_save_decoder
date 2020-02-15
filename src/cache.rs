@@ -14,6 +14,7 @@ pub struct Card {
     pub rarity: CardRarity,
     pub color: CardColor,
     pub type_: CardType,
+    pub misc: u32,
     pub id: String,
 }
 #[derive(Debug, Deserialize, Serialize)]
@@ -35,6 +36,18 @@ fn parse_card(contents: &str) -> Card {
         .captures(&contents)
         .expect("Failed to get create regex capture groups.");
     let id = id_match.get(1).expect("Failed to get id regex group.");
+    let misc_regex = Regex::new(r#"misc[ ]*=[ ]*(\d+)"#).expect("Failed to compile misc regex.");
+
+    let misc = match misc_regex.captures(contents) {
+        Some(c) => match c.get(1) {
+            Some(m) => m
+                .as_str()
+                .parse()
+                .unwrap_or_else(|_| panic!("Failed to parse misc value '{}'.", m.as_str())),
+            None => 0,
+        },
+        None => 0,
+    };
 
     let cap_matches: Vec<_> = cap_regex
         .find_iter(&contents)
@@ -54,6 +67,7 @@ fn parse_card(contents: &str) -> Card {
         .filter_map(|x| CardType::from_str(x))
         .collect();
     Card {
+        misc,
         id: id.as_str().to_owned(),
         rarity: rarity
             .pop()

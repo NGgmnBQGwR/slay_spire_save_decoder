@@ -135,7 +135,7 @@ fn get_random_cards(
             } else {
                 break JsonCard {
                     id: random_card_data.id.clone(),
-                    misc: 0,
+                    misc: random_card_data.misc,
                     upgrades: 0,
                 };
             }
