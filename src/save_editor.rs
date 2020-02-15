@@ -101,6 +101,7 @@ fn pack_file(value: JsonValue, filepath: &PathBuf) -> AnyResult<()> {
 }
 
 fn print_status(json: &JsonValue) {
+    println!("\n=====StS SAVE STATUS=====");
     println!("Gold: {} ({} gained)", json["gold"], json["gold_gained"]);
 
     let cards = serde_json::from_value::<Vec<JsonCard>>(json["cards"].clone()).unwrap();
