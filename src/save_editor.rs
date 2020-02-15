@@ -104,7 +104,7 @@ fn print_status(json: &JsonValue) {
 
     let cards = serde_json::from_value::<Vec<JsonCard>>(json["cards"].clone()).unwrap();
     let cards_ids: Vec<String> = cards.into_iter().map(|x| x.id).collect();
-    println!("Cards: {:?}", cards_ids);
+    println!("Cards ({}): {:?}", cards_ids.len(), cards_ids);
 
     let relics = serde_json::from_value::<Vec<String>>(json["relics"].clone()).unwrap();
     println!("Relics: {:?}", relics);
