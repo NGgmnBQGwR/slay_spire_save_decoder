@@ -233,7 +233,9 @@ pub fn process_file(save_file: &PathBuf, cache: &STSCache) -> AnyResult<()> {
                 }
             }
             "r" => {
-                if let Some(card_name) = get_card_name_from_user(&all_cache_card_ids) {
+                let cards = serde_json::from_value::<Vec<JsonCard>>(json_dict["cards"].clone()).unwrap();
+                let cards_ids: Vec<String> = cards.into_iter().map(|x| x.id).collect();
+                if let Some(card_name) = get_card_name_from_user(&cards_ids) {
                     json_dict["cards"] = remove_specific_card(&json_dict, &card_name);
                 }
             }
